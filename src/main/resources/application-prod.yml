@@ -1,0 +1,19 @@
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.example.bankcards: INFO
+    org.springframework.security: WARN
+
+server:
+  error:
+    include-message: never
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
