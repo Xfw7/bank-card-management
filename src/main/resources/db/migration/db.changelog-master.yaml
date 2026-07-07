@@ -1,2 +1,9 @@
 databaseChangeLog:
-
+  - include:
+      file: db/migration/changes/v1__create_users_table.yaml
+  - include:
+      file: db/migration/changes/v2__create_cards_table.yaml
+  - include:
+      file: db/migration/changes/v3__create_transfers_table.yaml
+  - include:
+      file: db/migration/changes/v4__create_indexes.yaml

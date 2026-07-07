@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: v4-create-indexes
+      author: karina
+      comment: "Create indexes for search, filtering and active cards"
+      changes:
+        - sql:
+            sql: |
+              CREATE INDEX idx_cards_user_id ON cards (user_id);
+              CREATE INDEX idx_cards_status ON cards (status);
+              CREATE INDEX idx_cards_last_four ON cards (last_four);
+              CREATE INDEX idx_cards_user_id_status ON cards (user_id, status);
+              CREATE INDEX idx_cards_user_id_last_four ON cards (user_id, last_four);
+
+              CREATE INDEX idx_cards_active_by_user
+                ON cards (user_id)
+                WHERE deleted_at IS NULL;
+
+              CREATE INDEX idx_transfers_from_card_id ON transfers (from_card_id);
+              CREATE INDEX idx_transfers_to_card_id ON transfers (to_card_id);
+              CREATE INDEX idx_transfers_created_at ON transfers (created_at DESC);
+
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS idx_transfers_created_at;
+              DROP INDEX IF EXISTS idx_transfers_to_card_id;
+              DROP INDEX IF EXISTS idx_transfers_from_card_id;
+              DROP INDEX IF EXISTS idx_cards_active_by_user;
+              DROP INDEX IF EXISTS idx_cards_user_id_last_four;
+              DROP INDEX IF EXISTS idx_cards_user_id_status;
+              DROP INDEX IF EXISTS idx_cards_last_four;
+              DROP INDEX IF EXISTS idx_cards_status;
+              DROP INDEX IF EXISTS idx_cards_user_id;
