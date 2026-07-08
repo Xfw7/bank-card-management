@@ -20,8 +20,7 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     @EntityGraph(attributePaths = "user")
     Optional<Card> findByIdAndDeletedAtIsNull(Long id);
 
-    // Serializes concurrent transfers on the same card (SELECT FOR UPDATE).
-    // JOIN FETCH user avoids a secondary SELECT when assertOwnership reads card.getUser().
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM Card c JOIN FETCH c.user WHERE c.id = :id AND c.deletedAt IS NULL")
     Optional<Card> findByIdForUpdate(@Param("id") Long id);

@@ -18,6 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+
 @Service
 @RequiredArgsConstructor
 public class CardService {
@@ -86,7 +89,14 @@ public class CardService {
         card.markDeleted();
     }
 
-
+    @Transactional
+    public int markExpiredCards() {
+        return cardRepository.findActiveExpiredCards(LocalDate.now(ZoneOffset.UTC))
+                .stream()
+                .peek(Card::markExpired)
+                .toList()
+                .size();
+    }
 
     @Transactional(readOnly = true)
     public PageResponse<CardResponse> getMyCards(CardStatus status, String lastFour, Pageable pageable) {
