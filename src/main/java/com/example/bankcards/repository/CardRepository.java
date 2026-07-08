@@ -21,8 +21,9 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     Optional<Card> findByIdAndDeletedAtIsNull(Long id);
 
     // Serializes concurrent transfers on the same card (SELECT FOR UPDATE).
+    // JOIN FETCH user avoids a secondary SELECT when assertOwnership reads card.getUser().
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT c FROM Card c WHERE c.id = :id AND c.deletedAt IS NULL")
+    @Query("SELECT c FROM Card c JOIN FETCH c.user WHERE c.id = :id AND c.deletedAt IS NULL")
     Optional<Card> findByIdForUpdate(@Param("id") Long id);
 
     boolean existsByIdAndUserIdAndDeletedAtIsNull(Long id, Long userId);

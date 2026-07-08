@@ -43,7 +43,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            // Single parse: verifies signature, issuer and expiry in one call.
             Claims claims = jwtService.parseClaims(token);
             String username = claims.getSubject();
 
