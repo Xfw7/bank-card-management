@@ -64,6 +64,9 @@ app:
     allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
     allowed-headers: Authorization,Content-Type
     allow-credentials: true
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:}
 
 springdoc:
   api-docs:

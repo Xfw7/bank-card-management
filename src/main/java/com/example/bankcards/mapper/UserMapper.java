@@ -1,6 +1,5 @@
 package com.example.bankcards.mapper;
 
-import com.example.bankcards.dto.response.AuthResponse;
 import com.example.bankcards.dto.response.UserResponse;
 import com.example.bankcards.entity.User;
 import org.mapstruct.Mapper;
@@ -17,9 +16,5 @@ public interface UserMapper {
 
     default Page<UserResponse> toResponsePage(Page<User> users) {
         return users.map(this::toResponse);
-    }
-
-    default AuthResponse toAuthResponse(String accessToken, User user) {
-        return new AuthResponse(accessToken, "Bearer", toResponse(user));
     }
 }

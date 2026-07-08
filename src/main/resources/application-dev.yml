@@ -20,3 +20,5 @@ springdoc:
 app:
   aes:
     secret-key: ${AES_SECRET_KEY:dev-only-aes-key-32-characters!}
+  jwt:
+    secret: ${JWT_SECRET:dev-only-jwt-secret-key-32-characters!}
