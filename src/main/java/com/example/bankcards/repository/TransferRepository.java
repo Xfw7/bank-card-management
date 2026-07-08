@@ -20,7 +20,13 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
     @EntityGraph(attributePaths = {"fromCard", "toCard"})
     @Query("""
             SELECT t FROM Transfer t
-            WHERE t.fromCard.id = :cardId OR t.toCard.id = :cardId
+            WHERE (t.fromCard.id = :cardId OR t.toCard.id = :cardId)
+              AND EXISTS (
+                  SELECT c FROM Card c
+                  WHERE c.id = :cardId AND c.user.id = :userId AND c.deletedAt IS NULL
+              )
             """)
-    Page<Transfer> findByCardId(@Param("cardId") Long cardId, Pageable pageable);
+    Page<Transfer> findByCardIdAndUserId(@Param("cardId") Long cardId,
+                                         @Param("userId") Long userId,
+                                         Pageable pageable);
 }
