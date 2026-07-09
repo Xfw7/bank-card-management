@@ -14,7 +14,7 @@ Base URL: `http://localhost:8080/api`
 
 ```powershell
 copy .env.example .env          # fill in DB_*, JWT_SECRET, AES_SECRET_KEY, ADMIN_PASSWORD
-.\run-dev.ps1                   # load .env (PowerShell)
+.\run-dev.ps1                   # load .env (PowerShell; skips empty values)
 docker compose up -d            # postgres on :5433
 mvn spring-boot:run
 ```
@@ -45,7 +45,7 @@ Expected response:
 }
 ```
 
-Use `Authorization: Bearer <accessToken>` on protected endpoints.
+In Swagger: **Authorize** → paste the token only (no `Bearer` prefix). For protected endpoints use `Authorization: Bearer <accessToken>` in curl.
 
 ## Contents
 
@@ -53,6 +53,7 @@ Use `Authorization: Bearer <accessToken>` on protected endpoints.
 - [Features](#features)
 - [Configuration](#configuration)
 - [Running locally](#running-locally)
+- [Documentation](#documentation)
 - [Build](#build)
 - [Running tests](#running-tests)
 - [API](#api)
@@ -83,12 +84,12 @@ Required in `.env`:
 | `DB_URL` | `jdbc:postgresql://localhost:5433/bank_cards` |
 | `DB_USERNAME`, `DB_PASSWORD` | same creds for docker-compose and the app |
 | `JWT_SECRET` | min 32 chars |
-| `AES_SECRET_KEY` | 16, 24, or 32 chars (32 is fine) |
+| `AES_SECRET_KEY` | exactly 16, 24, or 32 chars |
 | `ADMIN_PASSWORD` | used by `AdminBootstrap` on first run |
 
 Optional: `ADMIN_USERNAME` (default `admin`), `JWT_EXPIRATION_MS`, `SERVER_PORT`, `CORS_ALLOWED_ORIGINS`, `SPRING_PROFILES_ACTIVE`.
 
-Spring settings: `application.yml`, profile overrides in `application-dev.yml` / `application-prod.yml`. In `dev`, missing `JWT_SECRET` / `AES_SECRET_KEY` fall back to dev defaults — don't rely on that outside local work.
+Spring settings: `application.yml`, profile overrides in `application-dev.yml` / `application-prod.yml`. In `dev`, empty `JWT_SECRET` / `AES_SECRET_KEY` in `.env` fall back to dev defaults — don't rely on that outside local work.
 
 ## Running locally
 
@@ -111,7 +112,23 @@ mvn spring-boot:run
 
 Layered packages under `com.example.bankcards`: `controller`, `service`, `repository`, `entity`, `dto`, `mapper`, `security`, `config`, `exception`, `util`.
 
-Root files: `docker-compose.yml`, `.env.example`, `run-dev.ps1`. Migrations in `src/main/resources/db/migration/`. `docs/openapi.yaml` is still a stub — use Swagger or `/api/v3/api-docs`.
+Root: `docker-compose.yml`, `.env.example`, `run-dev.ps1`. Migrations: `src/main/resources/db/migration/`. API spec: `docs/openapi.yaml`.
+
+## Documentation
+
+| Resource | URL / path |
+|----------|------------|
+| Swagger UI (dev) | http://localhost:8080/api/swagger-ui.html |
+| OpenAPI YAML (runtime) | http://localhost:8080/api/v3/api-docs.yaml |
+| OpenAPI YAML (repo) | [docs/openapi.yaml](docs/openapi.yaml) |
+
+Download a fresh spec while the app is running:
+
+```powershell
+curl http://localhost:8080/api/v3/api-docs.yaml -o docs/openapi.yaml
+```
+
+Swagger UI is disabled in the `prod` profile.
 
 ## Build
 
@@ -132,7 +149,7 @@ Tests aren't written yet. `src/test/java` is mostly empty.
 
 ## API
 
-Base path is `/api`. Swagger: http://localhost:8080/api/swagger-ui.html
+Base path is `/api`. Full schema: [docs/openapi.yaml](docs/openapi.yaml) or Swagger UI.
 
 Paged lists use `page`, `size`, `sort` (Spring Data defaults).
 
@@ -191,7 +208,7 @@ On failure the API returns JSON with a `code` from `ErrorCode` — `INSUFFICIENT
 
 PostgreSQL 16, db `bank_cards`, host port `5433`.
 
-Schema is managed by Liquibase (`db/migration/db.changelog-master.yaml` → `v1`..`v4` changelogs). Hibernate validates on startup, doesn't generate DDL.
+Schema is managed by Liquibase (`db/migration/db.changelog-master.yaml`, changelogs `v1`–`v5`). Hibernate validates on startup, doesn't generate DDL.
 
 ## Docker
 
@@ -207,19 +224,21 @@ The app itself isn't containerized — run it with Maven locally.
 - Everything goes through `/api` — easy to miss in curl or a frontend base URL.
 - Services use `SecurityUtils.getCurrentUser()`, not `@AuthenticationPrincipal` on method args.
 - Entities don't leak past the service layer.
-- First admin is created on startup only when `ADMIN_PASSWORD` is set and no admin exists yet.
+- First admin is created on startup only when `ADMIN_PASSWORD` is set and no admin exists yet. Restart recreates admin if you deleted the only one.
 - `CardRepository.findByIdForUpdate` fetches the card owner in the same query to avoid an extra round trip.
-- `prod` profile disables Swagger (`application-prod.yml`).
+- `OpenApiConfig` adds JWT bearer auth to Swagger UI.
 
 ## Troubleshooting
 
 | Problem | Likely cause |
 |---------|----------------|
-| App fails on startup with AES/JWT error | `AES_SECRET_KEY` must be 16/24/32 chars; `JWT_SECRET` — min 32 |
+| App fails on startup with AES error | `AES_SECRET_KEY` must be exactly 16, 24, or 32 chars — count them |
+| App fails on startup with JWT error | `JWT_SECRET` — min 32 chars |
 | `docker compose up` fails on auth | `.env` not loaded — run `.\run-dev.ps1` first |
-| Admin login returns 401 | `ADMIN_PASSWORD` was empty on first start; admin never created — fix `.env`, clear DB or insert admin manually |
-| 404 on `/auth/login` | Missing `/api` prefix — use `http://localhost:8080/api/auth/login` |
-| 401 on protected endpoints | Token missing, expired, or wrong format — `Authorization: Bearer <token>` |
+| Admin login returns 401 | Wrong password, or admin was deleted — restart app to recreate via `AdminBootstrap` |
+| 404 on `/auth/login` | Missing `/api` prefix |
+| 401 `UNAUTHORIZED` on API calls | No token, expired token, or Authorize not set in Swagger |
+| 401 on `/v3/api-docs.yaml` | Pull latest code — spec endpoints are public |
 
 ## License
 
