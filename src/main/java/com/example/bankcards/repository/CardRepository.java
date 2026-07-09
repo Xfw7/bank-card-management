@@ -20,7 +20,6 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     @EntityGraph(attributePaths = "user")
     Optional<Card> findByIdAndDeletedAtIsNull(Long id);
 
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM Card c JOIN FETCH c.user WHERE c.id = :id AND c.deletedAt IS NULL")
     Optional<Card> findByIdForUpdate(@Param("id") Long id);
