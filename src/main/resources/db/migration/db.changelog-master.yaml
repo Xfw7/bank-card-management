@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/migration/changes/v3__create_transfers_table.yaml
   - include:
       file: db/migration/changes/v4__create_indexes.yaml
+  - include:
+      file: db/migration/changes/v5__fix_last_four_column_type.yaml

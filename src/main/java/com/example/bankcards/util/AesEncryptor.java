@@ -28,7 +28,8 @@ public class AesEncryptor {
     void init() {
         byte[] keyBytes = rawKey.getBytes();
         if (keyBytes.length != 16 && keyBytes.length != 24 && keyBytes.length != 32) {
-            throw new IllegalStateException("AES key must be 16, 24, or 32 bytes");
+            throw new IllegalStateException(
+                    "AES key must be 16, 24, or 32 bytes, got " + keyBytes.length);
         }
         secretKey = new SecretKeySpec(keyBytes, "AES");
     }

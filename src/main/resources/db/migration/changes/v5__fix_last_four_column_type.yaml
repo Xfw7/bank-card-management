@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: v5-fix-last-four-column-type
+      author: karina
+      comment: "Align last_four with Hibernate VARCHAR mapping (was CHAR(4)/bpchar)"
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE cards
+                ALTER COLUMN last_four TYPE VARCHAR(4);
+
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE cards
+                ALTER COLUMN last_four TYPE CHAR(4);
