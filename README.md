@@ -145,7 +145,34 @@ Env vars must be set for the jar run too.
 mvn test
 ```
 
-Tests aren't written yet. `src/test/java` is mostly empty.
+**65 tests** — service unit tests (Mockito) + controller slice tests (`@WebMvcTest` / MockMvc). No integration tests with a real database.
+
+### Service layer (`src/test/java/.../service/`)
+
+| Test class | Focus |
+|------------|--------|
+| `TransferServiceTest` (15) | Transfers, balance updates, pessimistic lock order, card errors, read endpoints |
+| `CardServiceTest` (15) | Create with PAN encryption, block request, admin/user reads, block/activate/delete, expiry scheduler |
+| `UserServiceTest` (11) | Create, conflict, CRUD, enable/disable, role update |
+| `AuthServiceTest` (3) | Login success, bad credentials, disabled user |
+
+### Controller layer (`src/test/java/.../controller/`)
+
+| Test class | Focus |
+|------------|--------|
+| `AuthControllerTest` (3) | `POST /auth/login`, validation, `BAD_CREDENTIALS` |
+| `UserControllerTest` (6) | Admin-only access, `GET`/`DELETE`, `NOT_FOUND` JSON |
+| `CardControllerTest` (7) | Admin vs user routes, `GET`/`DELETE`, `NOT_FOUND` JSON |
+| `TransferControllerTest` (5) | `USER`-only transfers, validation, `INSUFFICIENT_BALANCE` JSON |
+
+Shared test support: `TestFixtures`, `AbstractControllerTest`, `ControllerTestSecurityConfig`.
+
+Run a single class:
+
+```bash
+mvn test -Dtest=TransferServiceTest
+mvn test -Dtest="*ControllerTest"
+```
 
 ## API
 
